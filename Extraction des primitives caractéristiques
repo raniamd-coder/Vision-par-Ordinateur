@@ -1,0 +1,78 @@
+import cv2
+import numpy as np
+img = cv2.imread('../right01.jpg')
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+gray = np.float32(gray)
+dst = cv2.cornerHarris(gray, 2, 23, 0.04)
+img[dst>0.01 * dst.max()] = [0, 0, 255]
+cv2.imshow('Coins', img)
+cv2.waitKey()
+cv2.destroyAllWindows()
+
+
+import cv2
+import numpy as np
+img = cv2.imread('../WindowsLogo.jpg',0)
+size = np.size(img)
+skel = np.zeros(img.shape, np.uint8)
+ret, img = cv2.threshold(img, 127, 255, 0)
+element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+done = False
+while (not done):
+ eroded = cv2.erode(img, element)
+ temp = cv2.dilate(eroded, element)
+ temp = cv2.subtract(img, temp)
+ skel = cv2.bitwise_or(skel, temp)
+ img = eroded.copy()
+ zeros = size - cv2.countNonZero(img)
+ if zeros == size:
+     done = True
+cv2.imshow("Forme", skel)
+cv2.waitKey()
+cv2.destroyAllWindows()
+
+import cv2
+import numpy as np
+img = cv2.imread("../right01.jpg")
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+edges = cv2.Canny(gray, 75, 150)
+lines = cv2.HoughLinesP(edges, 1, np.pi/180, 40, minLineLength=20,
+maxLineGap=250)
+for line in lines:
+    x1, y1, x2, y2 = line[0]
+cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
+cv2.imshow("Bordures lignes", edges)
+cv2.imshow("Lingnes détectées", img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+import cv2
+import numpy as np
+image = cv2.imread('.../right01.jpg')
+gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+img = cv2.medianBlur(gray_img, 5)
+cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
+circles = cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,1,120,
+param1=100,param2=30,minRadius=0,
+maxRadius=0)
+circles = np.uint16(np.around(circles))
+for i in circles[0,:]:
+    
+ # Dessiner le cercle extérieur
+      cv2.circle(image, (i[0], i[1]), i[2], (0, 255, 0), 2)
+ # Dessiner le centre du cercle
+      cv2.circle(image, (i[0], i[1]), 2, (0, 0, 255), 3)
+cv2.imshow("Les cercles de l'image", image)
+
+cv2.waitKey()
+cv2.destroyAllWindows()
+
+
+import skimage
+import numpy as np
+import cv2
+img = np.array([[0,0,1,1],[0,0,1,1],[0,2,2,2],[2,2,3,3]],
+dtype=np.uint8)
+result = skimage.feature.graycomtrix(img,[1],[0, np.pi/4, np.pi/2,3*np.pi/4], levels=4)
+print (result[:, :, 0, 0])
+
