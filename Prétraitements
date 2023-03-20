@@ -1,0 +1,231 @@
+import cv2
+import numpy as np
+from matplotlib import pyplot as plt
+
+img =  cv2.imread("IRM_genou.tif", 1)
+
+plt.imshow(img, cmap='gray')
+plt.title('IRM du genou')
+plt.axis('off')
+plt.show()
+
+#Moyennage simple sur un masque carré de côté 3 pixels.
+filtre = np.ones((3,3)) / (9**2)
+img_simple = cv2.filter2D(img, -1, filtre)
+
+#Moyennage pondéré de type gaussien sur un masque carré de côté 3, 5 ou 7 pixels.
+img_gauss = cv2.GaussianBlur(img, (3, 3),0)
+
+#Filtrage médian sur un masque carré de côté 3, 5 ou 7 pixels.
+img_med = cv2.medianBlur(img, 3)
+
+plt.title("image filtrée par le filtre moyenneur")
+plt.axis('off')
+plt.imshow(img_simple)
+plt.show()
+
+plt.title('image filtrée par le filre de gausse')
+plt.axis('off')
+plt.imshow(img_gauss)
+plt.show()
+
+plt.title('image filtrée par le filre de median')
+plt.axis('off')
+plt.imshow(img_med)
+plt.show()
+
+
+#Extraction du bruit
+Bruit = abs(img-img_simple)
+plt.title('img - Moyennage simple')
+plt.axis('off')
+plt.imshow(Bruit)
+plt.show()
+
+Bruit = abs(img-img_gauss)
+plt.title('img - Moyennage gaussien')
+plt.axis('off')
+plt.imshow(Bruit)
+plt.show()
+
+Bruit = abs(img-img_med)
+plt.title('img - Moyennage médian')
+plt.axis('off')
+plt.imshow(Bruit)
+plt.show()
+
+
+# Erreur quadratique moyenne.
+
+Err_Q_Moy_simple = ((img-img_simple)**2).mean()
+Err_Q_Moy_Gauss = ((img-img_gauss)**2).mean()
+Err_Q_Moy_Median = ((img-img_med)**2).mean()
+
+print("Erreur quadratique moyenne par le filtre simple: %.2f" % Err_Q_Moy_simple)
+print("Erreur quadratique moyenne par le filtre guassien: %.2f" % Err_Q_Moy_Gauss)
+print("Erreur quadratique moyenne par le filtre median: %.2f" % Err_Q_Moy_Median)
+
+
+# Partie 2 : 
+#Transformations portant sur l’intensité
+img =  cv2.imread("Lune.tif", 1)
+plt.title("Image originale")
+plt.axis('off')
+plt.imshow(img,cmap='gray');
+plt.show()
+
+
+#Correction logarithmique
+
+# Appliquer la méthode de transformation log
+c = 255 / np.log(1 + np.max(img))
+img_trans = c * (np.log(img + 1))
+   
+# Specifier le type de données pour transformer 
+# Les valeurs réelles en valeurs entières
+img_trans = np.array(img_trans, dtype = np.uint8)
+plt.title('Correction logarithmique')
+plt.axis('off')
+plt.imshow(img_trans,cmap='gray'); 
+plt.show()
+
+#Correction Gamma appliqué par dessus la correction log
+
+gamma=1.5
+gamma_corrected = np.array(255*(img_trans/255) ** gamma, dtype = np.uint8)
+plt.title('+ Correction gamma', fontsize=10)
+plt.axis('off')
+plt.imshow(gamma_corrected,cmap='gray'); 
+plt.show()
+
+#Affinage de l’image
+def masque_flou(image, a=1, b=3):
+    """Filtre de type `masque flou`
+    a : float
+        Coefficient de rehaussement
+    b : int
+        Taille du filtre adoucisseur (sigma de la gaussienne)  
+    """
+    image_flou = cv2.GaussianBlur(image, (b, b),0)
+    image_p = image + a*(image - image_flou)
+    
+    return image_p.astype(dtype=np.uint8)
+
+
+
+
+plt.title('Sans Unsharp filter')
+plt.axis('off')
+plt.imshow(gamma_corrected,cmap='gray')
+plt.show()
+
+
+plt.title('Avec Unsharp filter(a=1,b=3)')
+plt.axis('off')
+img_unsharpened = masque_flou(gamma_corrected,1,3)
+plt.imshow(img_unsharpened,cmap='gray'); 
+plt.show()
+
+
+print("Differentes variations de a et b")
+
+plt.title('Avec Unsharp filter(a=10,b=3)')
+img_unsharpened = masque_flou(gamma_corrected,10,3)
+plt.axis('off')
+plt.imshow(img_unsharpened,cmap='gray')
+plt.show()
+
+
+
+plt.title('Avec Unsharp filter(a=1,b=7)')
+img_unsharpened = masque_flou(gamma_corrected,1,7)
+plt.axis('off')
+plt.imshow(img_unsharpened,cmap='gray')
+plt.show()
+
+
+plt.title('Avec Unsharp filter(a=5,b=15)')
+img_unsharpened = masque_flou(gamma_corrected,5,15)
+plt.axis('off')
+plt.imshow(img_unsharpened,cmap='gray')
+plt.show()
+
+#Egalisation d'histogramme
+
+def equalize_histogram(img): 
+    # Normaliser l'image de 0 à 255 
+    img = ((img - img.min()) / (img.max() - img.min()) * 255).astype('uint8') 
+    hist, bins = np.histogram(img, 256, [0,256]) 
+    T = np.cumsum(hist) 
+    # Somme cumulée 
+    T = (T - T.min()) / (T.max() - T.min()) 
+    # Normalisation entre 0 et 1 
+    return (255 * T[img]).astype('uint8')
+
+from skimage import exposure
+img_unsharpened = masque_flou(gamma_corrected,1,3)
+img_equalized = equalize_histogram (img_unsharpened)
+
+
+
+plt.hist(img_unsharpened.ravel(), bins=20)
+plt.axis('off')
+plt.show()
+
+
+plt.hist(img_equalized.ravel(), bins=20)
+plt.axis('off')
+plt.show()
+
+print("Resultats")
+f = plt.figure(figsize=(10,5))
+plt.subplot(121)
+plt.title('Avec Unsharp filter(a=1,b=3)')
+plt.imshow(img_unsharpened, cmap='gray')
+plt.axis('off')
+plt.subplot(122)
+plt.title('Après équalisation')
+plt.imshow(img_equalized, cmap='gray')
+plt.axis('off')
+plt.show()
+
+
+
+img_equalized_originale = (equalize_histogram(img))
+
+
+f = plt.figure(figsize=(10,5))
+plt.subplot(121)
+plt.imshow(img, cmap='gray')
+plt.axis('off')
+plt.subplot(122)
+plt.imshow(img_equalized_originale, cmap='gray')
+plt.axis('off')
+plt.tight_layout()
+plt.show()
+
+
+d = plt.figure(figsize=(10,5))
+plt.subplot(121)
+plt.title("Avec Unsharp filtre + égalisation")
+plt.imshow(img_equalized, cmap='gray')
+plt.axis('off')
+plt.subplot(122)
+plt.title("Sans Unsharp filtre + égalisation")
+plt.imshow(img_equalized_originale, cmap='gray')
+plt.axis('off')
+plt.tight_layout()
+plt.show()
+
+
+
+plt.hist(img_equalized.ravel(), bins=10)
+plt.axis('off')
+plt.show()
+
+
+plt.hist(img_equalized_originale.ravel(), bins=10)
+plt.axis('off')
+plt.show()
+
+
