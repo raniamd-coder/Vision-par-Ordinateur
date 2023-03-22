@@ -1,0 +1,125 @@
+#Segmentation par détection de contours
+#Le filtrage en utilisant le filtre de Canny
+import cv2
+img = cv2.imread('baboon.jpg',0)
+edges = cv2.Canny(img, 100, 200)
+cv2.imshow("Edge", edges)
+cv2.waitKey(0)
+edge = cv2.Laplacian(img, bit, ksize)
+#Le filtrage en utilisant le Laplacien
+import cv2
+import numpy as np
+img = cv2.imread('baboon.jpg',0)
+edge = cv2.Laplacian (img, cv2.CV_64F, ksize=3)
+#Dans les paramètres, la profondeur de bit est modifiée à
+64 bit float
+edge = np.uint8(np.absolute(edge))
+#Restaurer la profondeur de bit originale
+cv2.imshow('Laplacian filter', edge)
+cv2.waitKey()
+####################################################################""
+#Segmentation par formation de régions
+#Seuillage global et adaptatif
+import cv2
+import numpy as np
+img = cv2.imread('baboon.jpg',0)
+ret,thresh1 = cv2.threshold(img,100,255,cv2.THRESH_BINARY)
+ret,thresh2 =
+cv2.threshold(img,100,255,cv2.THRESH_BINARY_INV)
+ret,thresh3 = cv2.threshold(img,100,255,cv2.THRESH_TRUNC)
+ret,thresh4 = cv2.threshold(img,100,255,cv2.THRESH_TOZERO)
+ret,thresh5 =
+cv2.threshold(img,100,255,cv2.THRESH_TOZERO_INV)
+titles = ['Image
+originale','BINARY','BINARY_INV','TRUNC','TOZERO','TOZERO_I
+NV']
+images = [img, thresh1, thresh2, thresh3, thresh4, thresh5]
+for i in range(6) :
+cv2.imshow(titles[i], images[i])
+cv2.waitKey()
+
+import cv2
+import numpy as np
+from matplotlib import pyplot as plt
+img = cv2.imread('baboon.jpg',0)
+# Seuillage manuel
+ret1,th1 = cv2.threshold(img,100,255,cv2.THRESH_BINARY)
+# Seuillage par la méthode d'Otsu
+ret2,th2 = cv2.threshold(img,0,255,cv2.THRESH_OTSU)
+# euillage par la méthode d'Otsu après un filrage gaussien
+blur = cv2.GaussianBlur(img,(5,5),0)
+ret3,th3 = cv2.threshold(blur,0,255,cv2.THRESH_OTSU)
+# plot all the images and their histograms
+images = [img, 0, th1, img, 0, th2, blur, 0, th3]
+titles = ['Image originale','Histogramme','Seuillage global
+(Seuil=100)',
+'Image originale','Histogramme','Seuillage global
+(Otsu)',
+'Image filtrée','Histogramme','Seuillage global
+(Otsu)']
+for i in range(3):
+plt.subplot(3,3,i*3+1),plt.imshow(images[i*3],'gray')
+plt.title(titles[i*3]), plt.xticks([]), plt.yticks([])
+plt.subplot(3,3,i*3+2),plt.hist(images[i*3].ravel(),256)
+plt.title(titles[i*3+1]), plt.xticks([]), plt.yticks([])
+plt.subplot(3,3,i*3+3),plt.imshow(images[i*3+2],'gray')
+plt.title(titles[i*3+2]), plt.xticks([]), plt.yticks([])
+plt.show()
+
+import cv2
+import numpy as np
+from matplotlib import pyplot as plt
+img = cv2.imread('baboon.jpg',0)
+img = cv2.medianBlur(img,5)
+ret,th1 = cv2.threshold(img,100,255,cv2.THRESH_OTSU)
+th2 =
+cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2
+.THRESH_BINARY,11,2)
+th3 =
+cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_
+C,cv2.THRESH_BINARY,11,2)
+titles = ['Image original', "Seuillage par la méthode
+d'Otsu",
+'Seuillage adaptatif moyen', 'Seuillage
+adaptatif gaussien']
+images = [img, th1, th2, th3]
+for i in range(4):
+plt.subplot(2,2,i+1),plt.imshow(images[i],'gray')
+plt.title(titles[i])
+plt.xticks([]),plt.yticks([])
+plt.show()
+
+#Ligne de partage des eaux (Watershed)
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+img = cv2.imread("ela_original.jpg")
+img_blur = cv2.medianBlur(img, 13)
+img_gray = cv2.cvtColor(img_blur, cv2.COLOR_BGR2GRAY)
+ret, img_thres = cv2.threshold(img_gray, 0, 255,
+cv2.THRESH_OTSU)
+kernel = np.ones((3,3), np.uint8)
+opening = cv2.morphologyEx(img_thres, cv2.MORPH_OPEN,
+kernel=kernel, iterations=2)
+dist_transform = cv2.distanceTransform(opening,
+distanceType=cv2.DIST_L2, maskSize=5)
+ret, sure_foreground = cv2.threshold(dist_transform,
+thresh=0.025*np.max(dist_transform), maxval=255, type=0)
+sure_background = cv2.dilate(opening, kernel=kernel,
+iterations=6)
+sure_foreground = np.uint8(sure_foreground)
+unknown = cv2.subtract(sure_background, sure_foreground)
+ret, marker = cv2.connectedComponents(sure_foreground)
+marker = marker + 1
+marker[unknown == 255] = 0
+# Les régions blanches sont transformées en noir pour
+trouver des iles pour Watershed
+img_seg = cv2.watershed(image=img, markers=marker)
+img_seg = np.uint8(img_seg)
+for i in range(len(contour)):
+if hierarchy[0][i][3] == -1:
+cv2.drawContours(image=img,contours=contour,contourId
+x=i, color=(255,0,0), thickness=3)
+cv2.imshow("Contours de l'image", img)
+cv2.waitKey()
+
